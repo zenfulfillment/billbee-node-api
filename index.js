@@ -5,7 +5,9 @@ const _ = require('lodash');
 const rejectMissingUrl = () => Promise.reject(new Error('Missing url'));
 const rejectMissingBody = () => Promise.reject(new Error('Missing body'));
 
-module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'}) => {
+const bigIntStringify = (str) => str.replace(/:(\d{17})/g, ':"$1"');
+
+module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {stringifyBigInt = false} = {}) => {
   if (!apiKey) {
     throw new Error('Missing apiKey');
   }
@@ -18,10 +20,14 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'}) => {
     throw new Error('Missing pass');
   }
 
+  function maybeParse(res) {
+    return stringifyBigInt ? JSON.parse(bigIntStringify(res)) : res;
+  }
+
   function _request(args) {
     return request.defaults({
       baseUrl: `https://app01.billbee.de/api/${version}`,
-      json: true,
+      json: stringifyBigInt ? false : true,
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'X-Billbee-Api-Key': apiKey,
@@ -39,7 +45,8 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'}) => {
         return rejectMissingUrl();
       }
 
-      return _request({url, method: 'GET', qs});
+      return _request({url, method: 'GET', qs})
+        .then(maybeParse);
     },
 
     post(url, body) {
@@ -51,7 +58,8 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'}) => {
         return rejectMissingBody();
       }
 
-      return _request({url, method: 'POST', body});
+      return _request({url, method: 'POST', body})
+        .then(maybeParse);
     },
 
     put(url, body = {}) {
@@ -59,7 +67,8 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'}) => {
         return rejectMissingUrl();
       }
 
-      return _request({url, method: 'PUT', body});
+      return _request({url, method: 'PUT', body})
+        .then(maybeParse);
     },
 
     del(url) {
@@ -67,7 +76,8 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'}) => {
         return rejectMissingUrl();
       }
 
-      return _request({url, method: 'DELETE'});
+      return _request({url, method: 'DELETE'})
+        .then(maybeParse);
     }
   };
 };
