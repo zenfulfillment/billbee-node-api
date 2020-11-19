@@ -7,7 +7,7 @@ const rejectMissingBody = () => Promise.reject(new Error('Missing body'));
 
 const bigIntStringify = (str) => str.replace(/:(\d{17})/g, ':"$1"');
 
-module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {stringifyBigInt = false} = {}) => {
+module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {stringifyBigInt = true} = {}) => {
   if (!apiKey) {
     throw new Error('Missing apiKey');
   }
