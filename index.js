@@ -58,8 +58,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
         return rejectMissingBody();
       }
 
-      return _request({url, method: 'POST', body})
-        .then(maybeParse);
+      return _request({url, method: 'POST', body, json: true});
     },
 
     put(url, body = {}) {
@@ -67,8 +66,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
         return rejectMissingUrl();
       }
 
-      return _request({url, method: 'PUT', body})
-        .then(maybeParse);
+      return _request({url, method: 'PUT', body, json: true});
     },
 
     del(url) {
