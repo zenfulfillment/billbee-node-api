@@ -26,7 +26,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
 
   function _request(args) {
     return request.defaults({
-      baseUrl: `https://app01.billbee.de/api/${version}`,
+      baseUrl: `https://app.billbee.io/api/${version}`,
       json: stringifyBigInt ? false : true,
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
