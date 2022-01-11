@@ -1,6 +1,6 @@
 {
   "name": "billbee-node-api",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "Node module to access Billbee API",
   "main": "index.js",
   "scripts": {
