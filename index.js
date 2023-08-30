@@ -26,7 +26,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
 
   async function delayIfLimitReached(err, fn) {
     if (err.statusCode === 429) {
-      await Promise.delay(5000).then(() => fn());
+      await Promise.delay(2500).then(() => fn());
     }
     throw err;
   }
