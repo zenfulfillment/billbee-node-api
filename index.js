@@ -24,6 +24,13 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
     return stringifyBigInt ? JSON.parse(bigIntStringify(res)) : res;
   }
 
+  async function delayIfLimitReached(err, fn) {
+    if (err.statusCode === 429) {
+      await Promise.delay(2500).then(() => fn());
+    }
+    throw err;
+  }
+
   function _request(args) {
     return request.defaults({
       baseUrl: `https://app.billbee.io/api/${version}`,
@@ -44,9 +51,16 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
       if (_.isEmpty(url)) {
         return rejectMissingUrl();
       }
-
       return _request({url, method: 'GET', qs})
-        .then(maybeParse);
+        .then(maybeParse)
+        .catch((err) => {
+          return Promise.resolve(delayIfLimitReached(err, _request({
+            url,
+            method: 'GET',
+            qs
+          }), url));
+          throw err;
+        });
     },
 
     post(url, body) {
@@ -58,7 +72,16 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
         return rejectMissingBody();
       }
 
-      return _request({url, method: 'POST', body, json: true});
+      return _request({url, method: 'POST', body, json: true})
+        .catch((err) => {
+          return Promise.resolve(delayIfLimitReached(err, _request({
+            url,
+            method: 'POST',
+            body,
+            json: true
+          })));
+          throw err;
+        });
     },
 
     put(url, body = {}) {
@@ -66,7 +89,16 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
         return rejectMissingUrl();
       }
 
-      return _request({url, method: 'PUT', body, json: true});
+      return _request({url, method: 'PUT', body, json: true})
+        .catch((err) => {
+          return Promise.resolve(delayIfLimitReached(err, _request({
+            url,
+            method: 'POST',
+            body,
+            json: true
+          })));
+          throw err;
+        });
     },
 
     del(url) {
@@ -75,7 +107,14 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
       }
 
       return _request({url, method: 'DELETE'})
-        .then(maybeParse);
+        .then(maybeParse)
+        .catch((err) => {
+          return Promise.resolve(delayIfLimitReached(err, _request({
+            url,
+            method: 'DELETE',
+          })));
+          throw err;
+        });;
     }
   };
 };
