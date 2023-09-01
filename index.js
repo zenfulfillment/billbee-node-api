@@ -54,12 +54,11 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
       return _request({url, method: 'GET', qs})
         .then(maybeParse)
         .catch((err) => {
-          return Promise.resolve(delayIfLimitReached(err, _request({
+          return Promise.resolve(delayIfLimitReached(err, () => _request({
             url,
             method: 'GET',
             qs
-          }), url));
-          throw err;
+          })));
         });
     },
 
@@ -74,13 +73,12 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
 
       return _request({url, method: 'POST', body, json: true})
         .catch((err) => {
-          return Promise.resolve(delayIfLimitReached(err, _request({
+          return Promise.resolve(delayIfLimitReached(err, () => _request({
             url,
             method: 'POST',
             body,
             json: true
           })));
-          throw err;
         });
     },
 
@@ -91,13 +89,12 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
 
       return _request({url, method: 'PUT', body, json: true})
         .catch((err) => {
-          return Promise.resolve(delayIfLimitReached(err, _request({
+          return Promise.resolve(delayIfLimitReached(err, () => _request({
             url,
             method: 'POST',
             body,
             json: true
           })));
-          throw err;
         });
     },
 
@@ -109,11 +106,10 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
       return _request({url, method: 'DELETE'})
         .then(maybeParse)
         .catch((err) => {
-          return Promise.resolve(delayIfLimitReached(err, _request({
+          return Promise.resolve(delayIfLimitReached(err, () => _request({
             url,
             method: 'DELETE',
           })));
-          throw err;
         });;
     }
   };
