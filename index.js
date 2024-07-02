@@ -1,5 +1,5 @@
+const axios = require('axios');
 const Promise = require('bluebird');
-const request = require('request-promise');
 const _ = require('lodash');
 
 const rejectMissingUrl = () => Promise.reject(new Error('Missing url'));
@@ -7,7 +7,7 @@ const rejectMissingBody = () => Promise.reject(new Error('Missing body'));
 
 const bigIntStringify = (str) => str.replace(/:(\d{17})/g, ':"$1"');
 
-module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {stringifyBigInt = true} = {}) => {
+module.exports = ({ apiKey = '', user = '', pass = '', version = 'v1' } = {}, { stringifyBigInt = true } = {}) => {
   if (!apiKey) {
     throw new Error('Missing apiKey');
   }
@@ -20,97 +20,91 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
     throw new Error('Missing pass');
   }
 
+  const instance = axios.create({
+    baseURL: `https://app.billbee.io/api/${version}`,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'X-Billbee-Api-Key': apiKey,
+    },
+    auth: {
+      username: user,
+      password: pass
+    }
+  });
+
   function maybeParse(res) {
     return stringifyBigInt ? JSON.parse(bigIntStringify(res)) : res;
   }
 
   async function delayIfLimitReached(err, fn) {
-    if (err.statusCode === 429) {
-      await Promise.delay(2500).then(() => fn());
+    if (err.response && err.response.status === 429) {
+      await Promise.delay(2500);
+      return fn();
     }
     throw err;
   }
 
-  function _request(args) {
-    return request.defaults({
-      baseUrl: `https://app.billbee.io/api/${version}`,
-      json: stringifyBigInt ? false : true,
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'X-Billbee-Api-Key': apiKey,
-      },
-      auth: {
-        user,
-        pass
-      }
-    })(args).promise();
+  async function _request(config) {
+    try {
+      const response = await instance(config);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 
   return {
-    get(url, qs = {}) {
+    async get(url, params = {}) {
       if (_.isEmpty(url)) {
         return rejectMissingUrl();
       }
-      return _request({url, method: 'GET', qs})
-        .then(maybeParse)
-        .catch((err) => {
-          return Promise.resolve(delayIfLimitReached(err, () => _request({
-            url,
-            method: 'GET',
-            qs
-          })));
-        });
+      try {
+        const response = await _request({ url, method: 'GET', params });
+        return maybeParse(response);
+      } catch (err) {
+        return delayIfLimitReached(err, () => _request({ url, method: 'GET', params }));
+      }
     },
 
-    post(url, body) {
+    async post(url, data) {
       if (_.isEmpty(url)) {
         return rejectMissingUrl();
       }
 
-      if (_.isEmpty(body)) {
+      if (_.isEmpty(data)) {
         return rejectMissingBody();
       }
 
-      return _request({url, method: 'POST', body, json: true})
-        .catch((err) => {
-          return Promise.resolve(delayIfLimitReached(err, () => _request({
-            url,
-            method: 'POST',
-            body,
-            json: true
-          })));
-        });
+      try {
+        return await _request({ url, method: 'POST', data, json: true });
+      } catch (err) {
+        return delayIfLimitReached(err, () => _request({ url, method: 'POST', data, json: true }));
+      }
     },
 
-    put(url, body = {}) {
+    async put(url, data = {}) {
       if (_.isEmpty(url)) {
         return rejectMissingUrl();
       }
 
-      return _request({url, method: 'PUT', body, json: true})
-        .catch((err) => {
-          return Promise.resolve(delayIfLimitReached(err, () => _request({
-            url,
-            method: 'POST',
-            body,
-            json: true
-          })));
-        });
+      try {
+        return await _request({ url, method: 'PUT', data, json: true });
+      } catch (err) {
+        return delayIfLimitReached(err, () => _request({ url, method: 'PUT', data, json: true }));
+      }
     },
 
-    del(url) {
+    async del(url) {
       if (_.isEmpty(url)) {
         return rejectMissingUrl();
       }
 
-      return _request({url, method: 'DELETE'})
-        .then(maybeParse)
-        .catch((err) => {
-          return Promise.resolve(delayIfLimitReached(err, () => _request({
-            url,
-            method: 'DELETE',
-          })));
-        });;
+      try {
+        const response = await _request({ url, method: 'DELETE' });
+        return maybeParse(response);
+      } catch (err) {
+        return delayIfLimitReached(err, () => _request({ url, method: 'DELETE' }));
+      }
     }
   };
 };
