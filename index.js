@@ -98,6 +98,22 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
         });
     },
 
+    patch(url, body = {}) {
+      if (_.isEmpty(url)) {
+        return rejectMissingUrl();
+      }
+
+      return _request({url, method: 'PATCH', body, json: true})
+        .catch((err) => {
+          return Promise.resolve(delayIfLimitReached(err, () => _request({
+            url,
+            method: 'PATCH',
+            body,
+            json: true
+          })));
+        });
+    },
+
     del(url) {
       if (_.isEmpty(url)) {
         return rejectMissingUrl();
