@@ -21,7 +21,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
   }
 
   function maybeParse(res) {
-    return stringifyBigInt ? JSON.parse(bigIntStringify(res.data)) : res;
+    return stringifyBigInt ? JSON.parse(bigIntStringify(res)) : res;
   }
 
   async function delayIfLimitReached(err, fn) {
@@ -53,6 +53,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
         return rejectMissingUrl();
       }
       return _request({url, method: 'GET', params})
+        .then((res) => res.data)
         .then(maybeParse)
         .catch((err) => {
           return Promise.resolve(delayIfLimitReached(err, () => _request({
@@ -68,11 +69,12 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
         return rejectMissingUrl();
       }
 
-      if (_.isEmpty(body)) {
+      if (_.isEmpty(data)) {
         return rejectMissingBody();
       }
 
       return _request({url, method: 'POST', data})
+        .then((res) => res.data)
         .catch((err) => {
           return Promise.resolve(delayIfLimitReached(err, () => _request({
             url,
@@ -88,6 +90,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
       }
 
       return _request({url, method: 'PUT', data})
+        .then((res) => res.data)
         .catch((err) => {
           return Promise.resolve(delayIfLimitReached(err, () => _request({
             url,
@@ -103,6 +106,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
       }
 
       return _request({url, method: 'PATCH', data})
+        .then((res) => res.data)
         .catch((err) => {
           return Promise.resolve(delayIfLimitReached(err, () => _request({
             url,
@@ -118,13 +122,14 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
       }
 
       return _request({url, method: 'DELETE'})
+        .then((res) => res.data)
         .then(maybeParse)
         .catch((err) => {
           return Promise.resolve(delayIfLimitReached(err, () => _request({
             url,
             method: 'DELETE',
           })));
-        });;
+        });
     }
   };
 };
