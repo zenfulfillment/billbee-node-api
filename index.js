@@ -1,9 +1,17 @@
-const Promise = require('bluebird');
 const axios = require('axios');
-const _ = require('lodash');
 
 const rejectMissingUrl = () => Promise.reject(new Error('Missing url'));
 const rejectMissingBody = () => Promise.reject(new Error('Missing body'));
+
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const isEmpty = (value) => {
+  if (value === null || value === undefined) return true;
+  if (typeof value === 'string') return value.trim().length === 0;
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === 'object') return Object.keys(value).length === 0;
+  return false;
+};
 
 const bigIntStringify = (str) => {
   // If str is not a string, return it as is
@@ -37,15 +45,15 @@ const bigIntStringify = (str) => {
 
 module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {stringifyBigInt = true} = {}) => {
   if (!apiKey) {
-    throw new Error('Missing apiKey');
+    throw new Error('[billbee-node-api] Missing Credentials: apiKey');
   }
 
   if (!user) {
-    throw new Error('Missing user');
+    throw new Error('[billbee-node-api] Missing Credentials: user');
   }
 
   if (!pass) {
-    throw new Error('Missing pass');
+    throw new Error('[billbee-node-api] Missing Credentials: pass');
   }
 
   function maybeParse(res) {
@@ -68,7 +76,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
 
   async function delayIfLimitReached(err, fn) {
     if (err.response && err.response.status === 429) {
-      await Promise.delay(2500).then(() => fn());
+      await delay(2500).then(() => fn());
     }
     throw err;
   }
@@ -91,7 +99,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
 
   return {
     get(url, params = {}) {
-      if (_.isEmpty(url)) {
+      if (isEmpty(url)) {
         return rejectMissingUrl();
       }
       return _request({url, method: 'GET', params})
@@ -107,11 +115,11 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
     },
 
     post(url, data) {
-      if (_.isEmpty(url)) {
+      if (isEmpty(url)) {
         return rejectMissingUrl();
       }
 
-      if (_.isEmpty(data)) {
+      if (isEmpty(data)) {
         return rejectMissingBody();
       }
 
@@ -127,7 +135,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
     },
 
     put(url, data = {}) {
-      if (_.isEmpty(url)) {
+      if (isEmpty(url)) {
         return rejectMissingUrl();
       }
 
@@ -143,7 +151,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
     },
 
     patch(url, data = {}) {
-      if (_.isEmpty(url)) {
+      if (isEmpty(url)) {
         return rejectMissingUrl();
       }
 
@@ -159,7 +167,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
     },
 
     del(url) {
-      if (_.isEmpty(url)) {
+      if (isEmpty(url)) {
         return rejectMissingUrl();
       }
 
