@@ -1,32 +1,82 @@
-const Promise = require('bluebird');
 const axios = require('axios');
-const _ = require('lodash');
 
 const rejectMissingUrl = () => Promise.reject(new Error('Missing url'));
 const rejectMissingBody = () => Promise.reject(new Error('Missing body'));
 
-const bigIntStringify = (str) => str.replace(/:(\d{17})/g, ':"$1"');
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const isEmpty = (value) => {
+  if (value === null || value === undefined) return true;
+  if (typeof value === 'string') return value.trim().length === 0;
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === 'object') return Object.keys(value).length === 0;
+  return false;
+};
+
+const bigIntStringify = (str) => {
+  // If str is not a string, return it as is
+  if (typeof str !== 'string') return str;
+  
+  // First, temporarily mask any TikTokOrderID occurrences
+  // This pattern matches "TikTokOrderID:123456789..." with any number of digits
+  const tikTokPattern = /(TikTokOrderID:\d+)/g;
+  
+  // Create a map of placeholders to real values
+  const placeholders = {};
+  let placeholderCount = 0;
+  
+  // Replace all TikTokOrderIDs with placeholders
+  const maskedStr = str.replace(tikTokPattern, (match) => {
+    const placeholder = `__TIKTOK_PLACEHOLDER_${placeholderCount++}__`;
+    placeholders[placeholder] = match;
+    return placeholder;
+  });
+  
+  // Now apply the big integer conversion
+  let processedStr = maskedStr.replace(/:(\d{17})/g, ':"$1"');
+  
+  // Restore the TikTokOrderID values
+  for (const [placeholder, value] of Object.entries(placeholders)) {
+    processedStr = processedStr.replace(placeholder, value);
+  }
+  
+  return processedStr;
+};
 
 module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {stringifyBigInt = true} = {}) => {
   if (!apiKey) {
-    throw new Error('Missing apiKey');
+    throw new Error('[billbee-node-api] Missing Credentials: apiKey');
   }
 
   if (!user) {
-    throw new Error('Missing user');
+    throw new Error('[billbee-node-api] Missing Credentials: user');
   }
 
   if (!pass) {
-    throw new Error('Missing pass');
+    throw new Error('[billbee-node-api] Missing Credentials: pass');
   }
 
   function maybeParse(res) {
-    return stringifyBigInt ? JSON.parse(bigIntStringify(res)) : res;
+    if (!stringifyBigInt) return res;
+    
+    try {
+      // Handle both string and object inputs appropriately
+      const stringInput = typeof res === 'string' ? res : JSON.stringify(res);
+      const processed = bigIntStringify(stringInput);
+      return JSON.parse(processed);
+    } catch (e) {
+      console.error("[billbee-node-api] Error in maybeParse:", e);
+      if (e.position) {
+        console.error("[billbee-node-api] Context around error:", 
+          typeof res === 'string' ? res.substring(e.position - 30, e.position + 30) : "N/A");
+      }
+      throw e;
+    }
   }
 
   async function delayIfLimitReached(err, fn) {
     if (err.response && err.response.status === 429) {
-      await Promise.delay(2500).then(() => fn());
+      await delay(2500).then(() => fn());
     }
     throw err;
   }
@@ -49,7 +99,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
 
   return {
     get(url, params = {}) {
-      if (_.isEmpty(url)) {
+      if (isEmpty(url)) {
         return rejectMissingUrl();
       }
       return _request({url, method: 'GET', params})
@@ -65,11 +115,11 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
     },
 
     post(url, data) {
-      if (_.isEmpty(url)) {
+      if (isEmpty(url)) {
         return rejectMissingUrl();
       }
 
-      if (_.isEmpty(data)) {
+      if (isEmpty(data)) {
         return rejectMissingBody();
       }
 
@@ -85,7 +135,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
     },
 
     put(url, data = {}) {
-      if (_.isEmpty(url)) {
+      if (isEmpty(url)) {
         return rejectMissingUrl();
       }
 
@@ -101,7 +151,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
     },
 
     patch(url, data = {}) {
-      if (_.isEmpty(url)) {
+      if (isEmpty(url)) {
         return rejectMissingUrl();
       }
 
@@ -117,7 +167,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
     },
 
     del(url) {
-      if (_.isEmpty(url)) {
+      if (isEmpty(url)) {
         return rejectMissingUrl();
       }
 
