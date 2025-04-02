@@ -93,7 +93,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
   });
 
   function _request(config) {
-    return axiosInstance(config);
+    return Promise.resolve(axiosInstance(config));
   }
 
   return {
