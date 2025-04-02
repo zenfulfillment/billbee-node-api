@@ -1,6 +1,6 @@
-# billbee-node-api
+# Billbee Node API
 
-A Node.js client for the Billbee API, providing a simple and efficient way to interact with Billbee's services.
+This is a Nodejs client for the Billbee API, providing a simple and efficient way to interact with Billbee's services. 
 
 ## Features
 
