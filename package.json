@@ -1,6 +1,6 @@
 {
   "name": "billbee-node-api",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "Node module to access Billbee API",
   "main": "index.js",
   "types": "index.d.ts",
@@ -21,6 +21,9 @@
     "url": "https://github.com/zenfulfillment/billbee-node-api/issues"
   },
   "homepage": "https://github.com/zenfulfillment/billbee-node-api#readme",
+  "dependencies": {
+    "bluebird": "^3.5.1"
+  },
   "peerDependencies": {
     "axios": "^1.0.0"
   },

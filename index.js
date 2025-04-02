@@ -1,9 +1,8 @@
 const axios = require('axios');
+const Promise = require('bluebird');
 
 const rejectMissingUrl = () => Promise.reject(new Error('Missing url'));
 const rejectMissingBody = () => Promise.reject(new Error('Missing body'));
-
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const isEmpty = (value) => {
   if (value === null || value === undefined) return true;
@@ -76,7 +75,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
 
   async function delayIfLimitReached(err, fn) {
     if (err.response && err.response.status === 429) {
-      await delay(2500).then(() => fn());
+      await Promise.delay(2500).then(() => fn());
     }
     throw err;
   }
