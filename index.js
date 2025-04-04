@@ -57,6 +57,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
 
   function maybeParse(res) {
     if (!stringifyBigInt) return res;
+    if (!res) return res;
 
     try {
       // Handle both string and object inputs appropriately
