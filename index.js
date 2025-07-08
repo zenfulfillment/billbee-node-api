@@ -59,6 +59,10 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
     if (!stringifyBigInt) return res;
     if (!res) return res;
 
+    if (typeof res === 'string' && res.trim().startsWith('<html')) {
+      return res;
+    }
+    
     try {
       // Handle both string and object inputs appropriately
       const stringInput = typeof res === 'string' ? res : JSON.stringify(res);
