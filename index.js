@@ -59,7 +59,7 @@ module.exports = ({apiKey = '', user = '', pass = '', version = 'v1'} = {}, {str
     if (!stringifyBigInt) return res;
     if (!res) return res;
 
-    if (typeof res === 'string' && res.trim().startsWith('<html')) {
+    if (typeof res === 'string' && (res.trim().startsWith('<html') || res.trim().startsWith('<!DOCTYPE'))) {
       return res;
     }
     
